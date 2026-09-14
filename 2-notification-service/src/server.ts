@@ -6,6 +6,7 @@ import { Logger } from 'winston';
 import { config } from '@notifications/config';
 import { healthRoutes } from '@notifications/routes';
 import { checkConnection } from '@notifications/elasticsearch';
+import { createConnection } from '@notifications/queues/connection';
 
 const SERVER_PORT = 4001;
 
@@ -18,7 +19,9 @@ export function start(app: Application): void {
   startElasticSearch();
 }
 
-async function startQueues(): Promise<void> {}
+async function startQueues(): Promise<void> {
+  await createConnection();
+}
 
 function startElasticSearch(): void {
   checkConnection();
