@@ -3,10 +3,12 @@ import { Application } from 'express';
 import http from 'http';
 import { winstonLogger } from '@mayank30041995/jobber-shared';
 import { Logger } from 'winston';
+import { Channel } from 'amqplib';
 import { config } from '@notifications/config';
 import { healthRoutes } from '@notifications/routes';
 import { checkConnection } from '@notifications/elasticsearch';
 import { createConnection } from '@notifications/queues/connection';
+import { consumeAuthEmailMessages } from '@notifications/queues/email.consumer';
 
 const SERVER_PORT = 4001;
 
@@ -20,7 +22,12 @@ export function start(app: Application): void {
 }
 
 async function startQueues(): Promise<void> {
-  await createConnection();
+  const emailChannel: Channel = (await createConnection()) as Channel;
+  await consumeAuthEmailMessages(emailChannel);
+
+  await emailChannel.assertExchange('jobber-email-notification', 'direct');
+  const message = JSON.stringify({ name: 'Jobber', service: 'notification service' });
+  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message));
 }
 
 function startElasticSearch(): void {
