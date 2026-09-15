@@ -25,22 +25,6 @@ async function startQueues(): Promise<void> {
   const emailChannel: Channel = (await createConnection()) as Channel;
   await consumeAuthEmailMessages(emailChannel);
   await consumeOrderEmailMessages(emailChannel);
-  const varificationLink = `${config.CLIENT_URL}/confirm_email?v_token=GSUDJDG343HJSDYDYUDTDT}`;
-
-  const messageDetails: IEmailMessageDetails = {
-    receiverEmail: `${config.SENDER_EMAIL}`,
-    resetLink: varificationLink,
-    username: 'Mayank',
-    template: 'forgotPassword'
-  };
-  await emailChannel.assertExchange('jobber-email-notification', 'direct');
-  // const message1 = JSON.stringify({ name: 'Jobber', service: 'emain notification service' });
-  const message = JSON.stringify(messageDetails);
-  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message));
-
-  // await emailChannel.assertExchange('jobber-order-notification', 'direct');
-  // const message2 = JSON.stringify({ name: 'Jobber', service: 'order notification service' });
-  // emailChannel.publish('jobber-order-notification', 'order-email', Buffer.from(message2));
 }
 
 function startElasticSearch(): void {
