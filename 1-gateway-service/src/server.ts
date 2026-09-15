@@ -12,7 +12,7 @@ import compression from 'compression';
 import { StatusCodes } from 'http-status-codes';
 import { config } from '@gateway/config';
 import { elasticSearch } from '@gateway/elasticsearch';
-// import { appRoutes } from '@gateway/routes';
+import { appRoutes } from '@gateway/routes';
 // import { axiosAuthInstance } from '@gateway/services/api/auth.service';
 // import { axiosBuyerInstance } from '@gateway/services/api/buyer.service';
 // import { axiosSellerInstance } from '@gateway/services/api/seller.service';
@@ -91,7 +91,7 @@ export class GatewayServer {
   }
 
   private routesMiddleware(app: Application): void {
-    // appRoutes(app);
+    appRoutes(app);
   }
 
   private startElasticSearch(): void {
