@@ -1,7 +1,7 @@
 import 'express-async-errors';
 import { Application } from 'express';
 import http from 'http';
-import { winstonLogger } from '@mayank30041995/jobber-shared';
+import { IEmailMessageDetails, winstonLogger } from '@mayank30041995/jobber-shared';
 import { Logger } from 'winston';
 import { Channel } from 'amqplib';
 import { config } from '@notifications/config';
@@ -25,14 +25,21 @@ async function startQueues(): Promise<void> {
   const emailChannel: Channel = (await createConnection()) as Channel;
   await consumeAuthEmailMessages(emailChannel);
   await consumeOrderEmailMessages(emailChannel);
+  const varificationLink = `${config.CLIENT_URL}/confirm_email?v_token=GSUDJDG343HJSDYDYUDTDT}`;
 
+  const messageDetails: IEmailMessageDetails = {
+    receiverEmail: `${config.SENDER_EMAIL}`,
+    verifyLink: varificationLink,
+    template: 'verifyEmail'
+  };
   await emailChannel.assertExchange('jobber-email-notification', 'direct');
-  const message1 = JSON.stringify({ name: 'Jobber', service: 'emain notification service' });
-  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message1));
+  // const message1 = JSON.stringify({ name: 'Jobber', service: 'emain notification service' });
+  const message = JSON.stringify(messageDetails);
+  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message));
 
-  await emailChannel.assertExchange('jobber-order-notification', 'direct');
-  const message2 = JSON.stringify({ name: 'Jobber', service: 'order notification service' });
-  emailChannel.publish('jobber-order-notification', 'order-email', Buffer.from(message2));
+  // await emailChannel.assertExchange('jobber-order-notification', 'direct');
+  // const message2 = JSON.stringify({ name: 'Jobber', service: 'order notification service' });
+  // emailChannel.publish('jobber-order-notification', 'order-email', Buffer.from(message2));
 }
 
 function startElasticSearch(): void {

@@ -1,6 +1,6 @@
 {
   "name": "jobber-notifications-service",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "app.js",
   "scripts": {
     "start": "pm2 start ./build/src/app.js -i 5 --attach --watch | pino-pretty -c",
@@ -19,6 +19,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/email-templates": "^10.0.4",
     "@types/express": "^5.0.6",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
@@ -34,7 +35,7 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.12.2",
-    "@mayank30041995/jobber-shared": "^0.0.11",
+    "@mayank30041995/jobber-shared": "^0.0.12",
     "amqplib": "^2.0.1",
     "apache-arrow": "^21.2.0",
     "dotenv": "^17.4.2",
