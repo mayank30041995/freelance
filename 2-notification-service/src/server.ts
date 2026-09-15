@@ -8,7 +8,7 @@ import { config } from '@notifications/config';
 import { healthRoutes } from '@notifications/routes';
 import { checkConnection } from '@notifications/elasticsearch';
 import { createConnection } from '@notifications/queues/connection';
-import { consumeAuthEmailMessages } from '@notifications/queues/email.consumer';
+import { consumeAuthEmailMessages, consumeOrderEmailMessages } from '@notifications/queues/email.consumer';
 
 const SERVER_PORT = 4001;
 
@@ -24,10 +24,15 @@ export function start(app: Application): void {
 async function startQueues(): Promise<void> {
   const emailChannel: Channel = (await createConnection()) as Channel;
   await consumeAuthEmailMessages(emailChannel);
+  await consumeOrderEmailMessages(emailChannel);
 
   await emailChannel.assertExchange('jobber-email-notification', 'direct');
-  const message = JSON.stringify({ name: 'Jobber', service: 'notification service' });
-  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message));
+  const message1 = JSON.stringify({ name: 'Jobber', service: 'emain notification service' });
+  emailChannel.publish('jobber-email-notification', 'auth-email', Buffer.from(message1));
+
+  await emailChannel.assertExchange('jobber-order-notification', 'direct');
+  const message2 = JSON.stringify({ name: 'Jobber', service: 'order notification service' });
+  emailChannel.publish('jobber-order-notification', 'order-email', Buffer.from(message2));
 }
 
 function startElasticSearch(): void {
