@@ -5,6 +5,8 @@ npm i -D typescript typescript-transform-paths
 npm i -D ts-node tsc-alias tsconfig-paths
 npm i -D jest ts-jest @jest/types
 npm ls jest ts-jest @jest/types
+npm ls @types/jest
+npm i -D @types/jest
 
 npm i @elastic/elasticsearch amqplib dotenv ejs elastic-apm-node email-templates express express-async-errors http-status-codes nodemailer pino-pretty shelljs winston
 

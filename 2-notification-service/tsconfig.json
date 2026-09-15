@@ -5,6 +5,7 @@
 
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "isolatedModules": true,
 
     "paths": {
       "@notifications/*": ["./src/*"]
@@ -12,7 +13,7 @@
 
     "rootDir": ".",
     "outDir": "./build",
-
+    "types": ["jest"],
     "strict": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,

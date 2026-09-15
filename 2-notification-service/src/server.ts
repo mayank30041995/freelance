@@ -1,7 +1,7 @@
 import 'express-async-errors';
 import { Application } from 'express';
 import http from 'http';
-import { IEmailMessageDetails, winstonLogger } from '@mayank30041995/jobber-shared';
+import { winstonLogger } from '@mayank30041995/jobber-shared';
 import { Logger } from 'winston';
 import { Channel } from 'amqplib';
 import { config } from '@notifications/config';
