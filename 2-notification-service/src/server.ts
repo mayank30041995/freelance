@@ -29,8 +29,9 @@ async function startQueues(): Promise<void> {
 
   const messageDetails: IEmailMessageDetails = {
     receiverEmail: `${config.SENDER_EMAIL}`,
-    verifyLink: varificationLink,
-    template: 'verifyEmail'
+    resetLink: varificationLink,
+    username: 'Mayank',
+    template: 'forgotPassword'
   };
   await emailChannel.assertExchange('jobber-email-notification', 'direct');
   // const message1 = JSON.stringify({ name: 'Jobber', service: 'emain notification service' });
