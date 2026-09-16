@@ -1,0 +1,17 @@
+FROM node:21-alpine3.18
+
+WORKDIR /app
+
+COPY package.json ./
+COPY tsconfig.json ./
+COPY src ./src
+# COPY tools ./tools
+
+RUN ls -a
+
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    npm install && npm install -g nodemon
+
+EXPOSE 4002
+
+CMD ["npm", "run", "dev"]
