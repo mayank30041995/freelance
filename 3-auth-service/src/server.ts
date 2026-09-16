@@ -13,7 +13,7 @@ import compression from 'compression';
 import { checkConnection, createIndex } from '@auth/elasticsearch';
 import { appRoutes } from '@auth/routes';
 import { Channel } from 'amqplib';
-// import { createConnection } from '@auth/queues/connection';
+import { createConnection } from '@auth/queues/connection';
 
 const SERVER_PORT = 4002;
 const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'authenticationServer', 'debug');
@@ -62,7 +62,7 @@ function routesMiddleware(app: Application): void {
 }
 
 async function startQueues(): Promise<void> {
-  //   authChannel = (await createConnection()) as Channel;
+  authChannel = (await createConnection()) as Channel;
 }
 
 function startElasticSearch(): void {
