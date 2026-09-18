@@ -12,6 +12,7 @@ lerna-debug.log*
 .pnpm-debug.log*
 
 .npmrc
+gigs.sh
 
 build
 
