@@ -12,7 +12,7 @@ import { verify } from 'jsonwebtoken';
 import compression from 'compression';
 // import { checkConnection } from '@users/elasticsearch';
 // import { appRoutes } from '@users/routes';
-// import { createConnection } from '@users/queues/connection';
+import { createConnection } from '@users/queues/connection';
 import { Channel } from 'amqplib';
 // import {
 //   consumeBuyerDirectMessage,
@@ -28,7 +28,7 @@ const start = (app: Application): void => {
   securityMiddleware(app);
   standardMiddleware(app);
   routesMiddleware(app);
-  //   startQueues();
+  startQueues();
   startElasticSearch();
   usersErrorHandler(app);
   startServer(app);
@@ -65,13 +65,14 @@ const routesMiddleware = (app: Application): void => {
   //   appRoutes(app);
 };
 
-// const startQueues = async (): Promise<void> => {
-//   const userChannel: Channel = (await createConnection()) as Channel;
-//   await consumeBuyerDirectMessage(userChannel);
-//   await consumeSellerDirectMessage(userChannel);
-//   await consumeReviewFanoutMessages(userChannel);
-//   await consumeSeedGigDirectMessages(userChannel);
-// };
+const startQueues = async (): Promise<void> => {
+  createConnection();
+  // const userChannel: Channel = (await createConnection()) as Channel;
+  //   await consumeBuyerDirectMessage(userChannel);
+  //   await consumeSellerDirectMessage(userChannel);
+  //   await consumeReviewFanoutMessages(userChannel);
+  //   await consumeSeedGigDirectMessages(userChannel);
+};
 
 const startElasticSearch = (): void => {
   //   checkConnection();
