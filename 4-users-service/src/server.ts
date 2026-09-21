@@ -11,15 +11,15 @@ import cors from 'cors';
 import { verify } from 'jsonwebtoken';
 import compression from 'compression';
 // import { checkConnection } from '@users/elasticsearch';
-// import { appRoutes } from '@users/routes';
+import { appRoutes } from '@users/routes';
 import { createConnection } from '@users/queues/connection';
 import { Channel } from 'amqplib';
-// import {
-//   consumeBuyerDirectMessage,
-//   consumeReviewFanoutMessages,
-//   consumeSeedGigDirectMessages,
-//   consumeSellerDirectMessage
-// } from '@users/queues/user.consumer';
+import {
+  consumeBuyerDirectMessage,
+  consumeReviewFanoutMessages,
+  consumeSeedGigDirectMessages,
+  consumeSellerDirectMessage
+} from '@users/queues/user.consumer';
 
 const SERVER_PORT = 4003;
 const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'usersServer', 'debug');
@@ -62,16 +62,15 @@ const standardMiddleware = (app: Application): void => {
 };
 
 const routesMiddleware = (app: Application): void => {
-  //   appRoutes(app);
+  appRoutes(app);
 };
 
 const startQueues = async (): Promise<void> => {
-  createConnection();
-  // const userChannel: Channel = (await createConnection()) as Channel;
-  //   await consumeBuyerDirectMessage(userChannel);
-  //   await consumeSellerDirectMessage(userChannel);
-  //   await consumeReviewFanoutMessages(userChannel);
-  //   await consumeSeedGigDirectMessages(userChannel);
+  const userChannel: Channel = (await createConnection()) as Channel;
+  await consumeBuyerDirectMessage(userChannel);
+  await consumeSellerDirectMessage(userChannel);
+  await consumeReviewFanoutMessages(userChannel);
+  await consumeSeedGigDirectMessages(userChannel);
 };
 
 const startElasticSearch = (): void => {
