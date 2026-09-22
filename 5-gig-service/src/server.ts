@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { verify } from 'jsonwebtoken';
 import compression from 'compression';
-// import { checkConnection, createIndex } from '@gig/elasticsearch';
+import { checkConnection, createIndex } from '@gig/elasticsearch';
 import { appRoutes } from '@gig/routes';
 // import { createConnection } from '@gig/queues/connection';
 import { Channel } from 'amqplib';
@@ -68,8 +68,8 @@ const startQueues = async (): Promise<void> => {
 };
 
 const startElasticSearch = (): void => {
-//   checkConnection();
-//   createIndex('gigs');
+  checkConnection();
+  createIndex('gigs');
 };
 
 const gigErrorHandler = (app: Application): void => {
