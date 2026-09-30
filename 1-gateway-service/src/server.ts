@@ -16,11 +16,11 @@ import { appRoutes } from '@gateway/routes';
 import { axiosAuthInstance } from '@gateway/services/api/auth.service';
 import { axiosBuyerInstance } from '@gateway/services/api/buyer.service';
 import { axiosSellerInstance } from '@gateway/services/api/seller.service';
-// import { axiosGigInstance } from '@gateway/services/api/gig.service';
+import { axiosGigInstance } from '@gateway/services/api/gig.service';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-// import { SocketIOAppHandler } from '@gateway/sockets/socket';
+import { SocketIOAppHandler } from '@gateway/sockets/socket';
 // import { axiosMessageInstance } from '@gateway/services/api/message.service';
 // import { axiosOrderInstance } from '@gateway/services/api/order.service';
 // import { axiosReviewInstance } from '@gateway/services/api/review.service';
@@ -75,7 +75,7 @@ export class GatewayServer {
         axiosAuthInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
         axiosBuyerInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
         axiosSellerInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
-        // axiosGigInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
+        axiosGigInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
         // axiosMessageInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
         // axiosOrderInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
         // axiosReviewInstance.defaults.headers['Authorization'] = `Bearer ${req.session?.jwt}`;
@@ -126,28 +126,28 @@ export class GatewayServer {
   private async startServer(app: Application): Promise<void> {
     try {
       const httpServer: http.Server = new http.Server(app);
-      //   const socketIO: Server = await this.createSocketIO(httpServer);
+      const socketIO: Server = await this.createSocketIO(httpServer);
       this.startHttpServer(httpServer);
-      //   this.socketIOConnections(socketIO);
+      this.socketIOConnections(socketIO);
     } catch (error) {
       log.log('error', 'GatewayService startServer() error method:', error);
     }
   }
 
-  //   private async createSocketIO(httpServer: http.Server): Promise<Server> {
-  //     const io: Server = new Server(httpServer, {
-  //       cors: {
-  //         origin: `${config.CLIENT_URL}`,
-  //         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-  //       }
-  //     });
-  //     // const pubClient = createClient({ url: config.REDIS_HOST });
-  //     // const subClient = pubClient.duplicate();
-  //     // await Promise.all([pubClient.connect(), subClient.connect()]);
-  //     // io.adapter(createAdapter(pubClient, subClient));
-  //     // socketIO = io;
-  //     // return io;
-  //   }
+  private async createSocketIO(httpServer: http.Server): Promise<Server> {
+    const io: Server = new Server(httpServer, {
+      cors: {
+        origin: `${config.CLIENT_URL}`,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+      }
+    });
+    const pubClient = createClient({ url: config.REDIS_HOST });
+    const subClient = pubClient.duplicate();
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+    socketIO = io;
+    return io;
+  }
 
   private async startHttpServer(httpServer: http.Server): Promise<void> {
     try {
@@ -161,7 +161,7 @@ export class GatewayServer {
   }
 
   private socketIOConnections(io: Server): void {
-    // const socketIoApp = new SocketIOAppHandler(io);
-    // socketIoApp.listen();
+    const socketIoApp = new SocketIOAppHandler(io);
+    socketIoApp.listen();
   }
 }

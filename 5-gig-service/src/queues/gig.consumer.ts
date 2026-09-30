@@ -3,7 +3,7 @@ import { winstonLogger } from '@mayank30041995/jobber-shared';
 import { Channel, ConsumeMessage, Replies } from 'amqplib';
 import { Logger } from 'winston';
 import { createConnection } from '@gig/queues/connection';
-// import { seedData, updateGigReview } from '@gig/services/gig.service';
+import { seedData, updateGigReview } from '@gig/services/gig.service';
 
 const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'gigServiceConsumer', 'debug');
 
@@ -20,7 +20,7 @@ const consumeGigDirectMessage = async (channel: Channel): Promise<void> => {
     await channel.bindQueue(jobberQueue.queue, exchangeName, routingKey);
     channel.consume(jobberQueue.queue, async (msg: ConsumeMessage | null) => {
       const { gigReview } = JSON.parse(msg!.content.toString());
-    //   await updateGigReview(JSON.parse(gigReview));
+      await updateGigReview(JSON.parse(gigReview));
       channel.ack(msg!);
     });
   } catch (error) {
@@ -41,7 +41,7 @@ const consumeSeedDirectMessages = async (channel: Channel): Promise<void> => {
     await channel.bindQueue(jobberQueue.queue, exchangeName, routingKey);
     channel.consume(jobberQueue.queue, async (msg: ConsumeMessage | null) => {
       const { sellers, count } = JSON.parse(msg!.content.toString());
-    //   await seedData(sellers, count);
+      await seedData(sellers, count);
       channel.ack(msg!);
     });
   } catch (error) {
