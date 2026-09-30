@@ -7,12 +7,9 @@
     "moduleResolution": "NodeNext",
     "isolatedModules": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@gig/*": ["src/*"]
+      "@gig/*": ["./src/*"]
     },
-
-    "ignoreDeprecations": "6.0",
 
     "rootDir": ".",
     "outDir": "./build",
