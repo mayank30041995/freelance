@@ -17,6 +17,12 @@ if (process.env.ENABLE_APM === '1') {
   });
 }
 
+console.log('SHARED CLOUDINARY:', {
+  cloud_name: cloudinary.v2.config().cloud_name,
+  api_key: cloudinary.v2.config().api_key ? 'SET' : 'MISSING',
+  api_secret: cloudinary.v2.config().api_secret ? 'SET' : 'MISSING'
+});
+
 class Config {
   public DATABASE_URL: string | undefined;
   public NODE_ENV: string | undefined;
