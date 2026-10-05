@@ -20,7 +20,7 @@ export class SocketIOAppHandler {
   }
 
   public listen(): void {
-    // this.chatSocketServiceIOConnections();
+    this.chatSocketServiceIOConnections();
     // this.orderSocketServiceIOConnections();
 
     this.io.on('connection', async (socket: Socket) => {

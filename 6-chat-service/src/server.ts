@@ -12,7 +12,7 @@ import { verify } from 'jsonwebtoken';
 import compression from 'compression';
 import { checkConnection } from '@chat/elasticsearch';
 import { appRoutes } from '@chat/routes';
-// import { createConnection } from '@chat/queues/connection';
+import { createConnection } from '@chat/queues/connection';
 import { Channel } from 'amqplib';
 import { Server } from 'socket.io';
 
@@ -63,7 +63,7 @@ const routesMiddleware = (app: Application): void => {
 };
 
 const startQueues = async (): Promise<void> => {
-  // chatChannel = (await createConnection()) as Channel;
+  chatChannel = (await createConnection()) as Channel;
 };
 
 const startElasticSearch = (): void => {
@@ -112,5 +112,4 @@ const startHttpServer = (httpServer: http.Server): void => {
   }
 };
 
-export { start, socketIOChatObject };
-// export { start, chatChannel, socketIOChatObject };
+export { start, chatChannel, socketIOChatObject };
