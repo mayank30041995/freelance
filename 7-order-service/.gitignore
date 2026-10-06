@@ -13,6 +13,8 @@ lerna-debug.log*
 
 .npmrc
 gigs.sh
+.env.dev
+# type 7-order-service\.gitignore
 
 build
 

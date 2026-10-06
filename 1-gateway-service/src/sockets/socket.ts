@@ -21,7 +21,7 @@ export class SocketIOAppHandler {
 
   public listen(): void {
     this.chatSocketServiceIOConnections();
-    // this.orderSocketServiceIOConnections();
+    this.orderSocketServiceIOConnections();
 
     this.io.on('connection', async (socket: Socket) => {
       log.info(`Gateway client connected: ${socket.id}`);
@@ -84,29 +84,29 @@ export class SocketIOAppHandler {
     });
   }
 
-  //   private orderSocketServiceIOConnections(): void {
-  //     orderSocketClient = io(config.ORDER_BASE_URL, {
-  //       transports: ['websocket', 'polling'],
-  //       reconnection: true,
-  //       reconnectionAttempts: Infinity,
-  //       reconnectionDelay: 1000,
-  //       reconnectionDelayMax: 5000
-  //     });
+  private orderSocketServiceIOConnections(): void {
+    orderSocketClient = io(config.ORDER_BASE_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000
+    });
 
-  //     orderSocketClient.on('connect', () => {
-  //       log.info(`OrderService socket connected: ${orderSocketClient.id}`);
-  //     });
+    orderSocketClient.on('connect', () => {
+      log.info(`OrderService socket connected: ${orderSocketClient.id}`);
+    });
 
-  //     orderSocketClient.on('disconnect', (reason) => {
-  //       log.warn(`OrderService socket disconnected: ${reason}`);
-  //     });
+    orderSocketClient.on('disconnect', (reason) => {
+      log.warn(`OrderService socket disconnected: ${reason}`);
+    });
 
-  //     orderSocketClient.on('connect_error', (error) => {
-  //       log.error(`OrderService socket connection error: ${error.message}`);
-  //     });
+    orderSocketClient.on('connect_error', (error) => {
+      log.error(`OrderService socket connection error: ${error.message}`);
+    });
 
-  //     orderSocketClient.on('order notification', (order: IOrderDocument, notification: IOrderNotifcation) => {
-  //       this.io.emit('order notification', order, notification);
-  //     });
-  //   }
+    orderSocketClient.on('order notification', (order: IOrderDocument, notification: IOrderNotifcation) => {
+      this.io.emit('order notification', order, notification);
+    });
+  }
 }
