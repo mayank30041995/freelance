@@ -1,0 +1,289 @@
+@baseUrl = http://localhost:4000
+@urlPath = api/gateway/v1
+
+# @orderId = REPLACE_WITH_ORDER_ID
+# @sellerId = REPLACE_WITH_SELLER_ID
+# @buyerId = REPLACE_WITH_BUYER_ID
+# @userTo = REPLACE_WITH_USER_TO
+# @notificationId = REPLACE_WITH_NOTIFICATION_ID
+
+# @paymentIntentId = REPLACE_WITH_PAYMENT_INTENT_ID
+
+# @gigId = REPLACE_WITH_GIG_ID
+
+# @sellerUsername = REPLACE_WITH_SELLER_USERNAME
+# @sellerEmail = REPLACE_WITH_SELLER_EMAIL
+# @sellerImage = REPLACE_WITH_SELLER_IMAGE
+
+# @buyerUsername = REPLACE_WITH_BUYER_USERNAME
+# @buyerEmail = REPLACE_WITH_BUYER_EMAIL
+# @buyerImage = REPLACE_WITH_BUYER_IMAGE
+
+# @gigCoverImage = REPLACE_WITH_GIG_COVER_IMAGE
+# @gigMainTitle = REPLACE_WITH_GIG_MAIN_TITLE
+# @gigBasicTitle = REPLACE_WITH_GIG_BASIC_TITLE
+# @gigBasicDescription = REPLACE_WITH_GIG_BASIC_DESCRIPTION
+
+@orderId = TEST-ORDER-001
+@sellerId = 10
+@buyerId = 6ab11939df8009bb23d7c81b
+@userTo = REPLACE_WITH_USER_TO
+@notificationId = REPLACE_WITH_NOTIFICATION_ID
+
+@paymentIntentId = REPLACE_WITH_PAYMENT_INTENT_ID
+
+@gigId = REPLACE_WITH_GIG_ID
+
+@sellerUsername = REPLACE_WITH_SELLER_USERNAME
+@sellerEmail = REPLACE_WITH_SELLER_EMAIL
+@sellerImage = REPLACE_WITH_SELLER_IMAGE
+
+@buyerUsername = REPLACE_WITH_BUYER_USERNAME
+@buyerEmail = REPLACE_WITH_BUYER_EMAIL
+@buyerImage = REPLACE_WITH_BUYER_IMAGE
+
+@gigCoverImage = REPLACE_WITH_GIG_COVER_IMAGE
+@gigMainTitle = REPLACE_WITH_GIG_MAIN_TITLE
+@gigBasicTitle = REPLACE_WITH_GIG_BASIC_TITLE
+@gigBasicDescription = REPLACE_WITH_GIG_BASIC_DESCRIPTION
+
+### 1. GET ORDER BY ORDER ID
+GET {{baseUrl}}/{{urlPath}}/order/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+###
+
+### 2. GET SELLER ORDERS
+GET {{baseUrl}}/{{urlPath}}/order/seller/{{sellerId}}
+Accept: application/json
+Content-Type: application/json
+
+###
+
+### 3. GET BUYER ORDERS
+GET {{baseUrl}}/{{urlPath}}/order/buyer/{{buyerId}}
+Accept: application/json
+Content-Type: application/json
+
+###
+
+### 4. GET ORDER NOTIFICATIONS
+GET {{baseUrl}}/{{urlPath}}/order/notification/{{userTo}}
+Accept: application/json
+Content-Type: application/json
+
+###
+
+### 5. CREATE PAYMENT INTENT
+POST {{baseUrl}}/{{urlPath}}/order/create-payment-intent
+Accept: application/json
+Content-Type: application/json
+
+{
+  "price": 50,
+  "buyerId": "{{buyerId}}"
+}
+
+###
+
+### 6. CREATE ORDER
+POST {{baseUrl}}/{{urlPath}}/order
+Accept: application/json
+Content-Type: application/json
+
+{
+  "offer": {
+    "gigTitle": "Test Gig",
+    "price": 20,
+    "description": "Test order description",
+    "deliveryInDays": 3,
+    "oldDeliveryDate": "2026-10-08",
+    "accepted": true,
+    "cancelled": false
+  },
+  "gigId": "test-gig-1",
+  "sellerId": "10",
+  "sellerUsername": "seller",
+  "sellerEmail": "seller@test.com",
+  "sellerImage": "https://example.com/seller.jpg",
+  "gigCoverImage": "https://example.com/gig.jpg",
+  "gigMainTitle": "Test Gig Main Title",
+  "gigBasicTitle": "Basic Package",
+  "gigBasicDescription": "Basic test package",
+  "buyerId": "25",
+  "buyerUsername": "Panny",
+  "buyerEmail": "panny@test.com",
+  "buyerImage": "https://example.com/buyer.jpg",
+  "status": "Pending",
+  "orderId": "TEST-ORDER-001",
+  "invoiceId": "TEST-INVOICE-001",
+  "quantity": 1,
+  "price": 20,
+  "requirements": "Test requirements",
+  "paymentIntent": "pi_1UNAcCA1T2K9h4zLMhyO7Wn5"
+}
+
+# {
+#   "offer": {
+#     "gigTitle": "Node.js API Development",
+#     "price": 50,
+#     "description": "I will build the requested Node.js API.",
+#     "deliveryInDays": 3,
+#     "oldDeliveryDate": "2026-10-10",
+#     "newDeliveryDate": "2026-10-13",
+#     "accepted": true,
+#     "cancelled": false
+#   },
+#   "gigId": "{{gigId}}",
+#   "sellerId": "{{sellerId}}",
+#   "sellerUsername": "{{sellerUsername}}",
+#   "sellerEmail": "{{sellerEmail}}",
+#   "sellerImage": "{{sellerImage}}",
+#   "gigCoverImage": "{{gigCoverImage}}",
+#   "gigMainTitle": "{{gigMainTitle}}",
+#   "gigBasicTitle": "{{gigBasicTitle}}",
+#   "gigBasicDescription": "{{gigBasicDescription}}",
+#   "buyerId": "{{buyerId}}",
+#   "buyerUsername": "{{buyerUsername}}",
+#   "buyerEmail": "{{buyerEmail}}",
+#   "buyerImage": "{{buyerImage}}",
+#   "status": "In Progress",
+#   "orderId": "ORDER-TEST-001",
+#   "invoiceId": "INVOICE-TEST-001",
+#   "quantity": 1,
+#   "price": 50,
+#   "serviceFee": 0,
+#   "requirements": "Build the requested Node.js API.",
+#   "paymentIntent": "{{paymentIntentId}}",
+#   "requestExtension": {
+#     "originalDate": "2026-10-05",
+#     "newDate":"2026-10-05",
+#     "days": 0,
+#     "reason": ""
+#   },
+#   "delivered": false,
+#   "approvedAt": "",
+#   "deliveredWork": [],
+#   "dateOrdered": "2026-10-05",
+#   "events": {
+#     "placeOrder": "2026-10-05",
+#     "requirements": "2026-10-05",
+#     "orderStarted": "2026-10-05",
+#     "deliverydateUpdate": "",
+#     "orderDelivered": "",
+#     "buyerReview": "",
+#     "sellerReview": ""
+#   },
+#   "buyerReview": {
+#     "rating": 0,
+#     "review": ""
+#   },
+#   "sellerReview": {
+#     "rating": 0,
+#     "review": ""
+#   }
+# }
+
+###
+
+### 7. REQUEST DELIVERY EXTENSION
+PUT {{baseUrl}}/{{urlPath}}/order/extension/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "originalDate": "2026-10-13",
+  "newDate": "2026-10-16",
+  "days": 3,
+  "reason": "Additional development time is required.",
+  "deliveryDateUpdate": "2026-10-05"
+}
+
+###
+
+### 8. APPROVE DELIVERY DATE EXTENSION
+PUT {{baseUrl}}/{{urlPath}}/order/gig/approve/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "originalDate": "2026-10-13",
+  "newDate": "2026-10-16",
+  "days": 3,
+  "reason": "Extension approved.",
+  "deliveryDateUpdate": "2026-10-05"
+}
+
+###
+
+### 9. REJECT DELIVERY DATE EXTENSION
+PUT {{baseUrl}}/{{urlPath}}/order/gig/reject/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "originalDate": "2026-10-13",
+  "newDate": "2026-10-16",
+  "days": 3,
+  "reason": "Extension rejected.",
+  "deliveryDateUpdate": "2026-10-05"
+}
+
+###
+
+### 10. DELIVER ORDER - WITHOUT FILE
+PUT {{baseUrl}}/{{urlPath}}/order/deliver-order/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "message": "The requested work has been completed.",
+  "file": "",
+  "fileType": "",
+  "fileName": "",
+  "fileSize": ""
+}
+
+###
+
+### 11. APPROVE ORDER
+PUT {{baseUrl}}/{{urlPath}}/order/approve-order/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "sellerId": "{{sellerId}}",
+  "buyerId": "{{buyerId}}",
+  "ongoingJobs": 0,
+  "completedJobs": 1,
+  "totalEarnings": 50,
+  "purchasedGigs": 1
+}
+
+###
+
+### 12. CANCEL ORDER
+PUT {{baseUrl}}/{{urlPath}}/order/cancel/{{orderId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "paymentIntentId": "{{paymentIntentId}}",
+  "orderData": {
+    "sellerId": "{{sellerId}}",
+    "buyerId": "{{buyerId}}",
+    "purchasedGigs": 0
+  }
+}
+
+###
+
+### 13. MARK NOTIFICATION AS READ
+PUT {{baseUrl}}/{{urlPath}}/order/notification/mark-as-read
+Accept: application/json
+Content-Type: application/json
+
+{
+  "notificationId": "{{notificationId}}"
+}

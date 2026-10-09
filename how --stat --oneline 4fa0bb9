@@ -1,0 +1,36 @@
+[33m98b339a[m[33m ([m[1;32mrecovery[m[33m)[m local dockerization .env changes
+ 1-gateway-service/.env.dev            |   2 [32m+[m[31m-[m
+ 2-notification-service/.env.dev       |   2 [32m+[m[31m-[m
+ 2-notification-service/Dockerfile     |   2 [32m+[m[31m-[m
+ 2-notification-service/Dockerfile.dev |   2 [32m+[m[31m-[m
+ 2-notification-service/package.json   |   4 [32m+[m[31m-[m
+ 3-auth-service/.env.dev               |   2 [32m+[m[31m-[m
+ 3-auth-service/package-lock.json      |   2 [32m+[m[31m-[m
+ 3-auth-service/package.json           |   2 [32m+[m[31m-[m
+ 4-users-service/.env.dev              |   2 [32m+[m[31m-[m
+ 4-users-service/package-lock.json     |   2 [32m+[m[31m-[m
+ 4-users-service/package.json          |   2 [32m+[m[31m-[m
+ 5-gig-service/.env.dev                |   6 [32m+[m[31m-[m
+ 5-gig-service/package-lock.json       |   2 [32m+[m[31m-[m
+ 5-gig-service/package.json            |   2 [32m+[m[31m-[m
+ 6-chat-service/.env.dev               |   6 [32m+[m[31m-[m
+ 6-chat-service/package-lock.json      |   2 [32m+[m[31m-[m
+ 6-chat-service/package.json           |   2 [32m+[m[31m-[m
+ 7-order-service/package-lock.json     |   2 [32m+[m[31m-[m
+ 7-order-service/package.json          |   2 [32m+[m[31m-[m
+ 8-review-service/package-lock.json    |   2 [32m+[m[31m-[m
+ 8-review-service/package.json         |   2 [32m+[m[31m-[m
+ 8-review-service/src/config.ts        |   3 [32m+[m[31m-[m
+ apiCalls/auth.http                    | 160 [32m++++++++++++[m
+ apiCalls/buyer.http                   | 187 [32m++++++++++++++[m
+ apiCalls/chat.http                    | 410 [32m++++++++++++++++++++++++++++++[m
+ apiCalls/gigs.http                    | 276 [32m++++++++++++++++++++[m
+ apiCalls/order.http                   | 289 [32m+++++++++++++++++++++[m
+ apiCalls/seed.http                    |  20 [32m++[m
+ apiCalls/seller.http                  | 173 [32m+++++++++++++[m
+ volumes/apm-server.yml                |  21 [32m++[m
+ volumes/docker-compose.yaml           | 461 [32m++++++++++++++++++++++++++++++++++[m
+ volumes/heartbeat.yml                 |  80 [32m++++++[m
+ volumes/kibana.yml                    |  39 [32m+++[m
+ volumes/metricbeat.yml                |  95 [32m+++++++[m
+ 34 files changed, 2239 insertions(+), 27 deletions(-)

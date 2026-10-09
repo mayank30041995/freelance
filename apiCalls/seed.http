@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:4000
+# @urlPath = api/v1/auth
+@urlPath = api/gateway/v1/
+
+
+###
+PUT {{baseUrl}}/{{urlPath}}/auth/seed/10
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{}
+
+###
+PUT {{baseUrl}}/{{urlPath}}/seller/seed/20
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{}

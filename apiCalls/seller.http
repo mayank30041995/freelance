@@ -1,0 +1,173 @@
+@baseUrl = http://localhost:4000
+@urlPath = api/gateway/v1
+
+### =====================================================
+### SELLER
+### =====================================================
+
+### Get seller by ID
+GET {{baseUrl}}/{{urlPath}}/seller/id/SELLER_ID
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+###
+
+### Get seller by username
+GET {{baseUrl}}/{{urlPath}}/seller/username/Thicklance
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+###
+
+### Get random sellers
+GET {{baseUrl}}/{{urlPath}}/seller/random/10
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+###
+
+### Create seller
+POST {{baseUrl}}/{{urlPath}}/seller/create
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "profilePublicId": "PROFILE_PUBLIC_ID",
+  "fullName": "John Doe",
+  "email": "john@example.com",
+  "profilePicture": "https://example.com/profile.jpg",
+  "description": "Full-stack developer with experience building web applications.",
+  "oneliner": "Full-stack developer",
+  "country": "India",
+  "skills": [
+    "Web development",
+    "Programming"
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "level": "Native"
+    }
+  ],
+  "responseTime": 2,
+  "experience": [
+    {
+      "company": "Tech Solutions",
+      "title": "Full Stack Developer",
+      "startDate": "January 2022",
+      "endDate": "Present",
+      "description": "Developed and maintained full-stack web applications.",
+      "currentlyWorkingHere": true
+    }
+  ],
+  "education": [
+    {
+      "country": "India",
+      "university": "ABC University",
+      "title": "Bachelor of Technology",
+      "major": "Computer Science",
+      "year": "2021"
+    }
+  ],
+  "socialLinks": [
+    "https://github.com/johndoe"
+  ],
+  "certificates": [
+    {
+      "name": "Full Stack Development",
+      "from": "Tech Academy",
+      "year": 2023
+    }
+  ]
+}
+
+###
+
+### Update seller
+PUT {{baseUrl}}/{{urlPath}}/seller/SELLER_ID
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "profilePublicId": "PROFILE_PUBLIC_ID",
+  "fullName": "John Doe",
+  "profilePicture": "https://example.com/profile.jpg",
+  "description": "Updated full-stack developer profile.",
+  "oneliner": "Experienced Full Stack Developer",
+  "country": "India",
+  "skills": [
+    "Web development",
+    "Programming"
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "level": "Native"
+    }
+  ],
+  "responseTime": 2,
+  "experience": [
+    {
+      "company": "Tech Solutions",
+      "title": "Senior Full Stack Developer",
+      "startDate": "January 2022",
+      "endDate": "Present",
+      "description": "Building and maintaining full-stack web applications.",
+      "currentlyWorkingHere": true
+    }
+  ],
+  "education": [
+    {
+      "country": "India",
+      "university": "ABC University",
+      "title": "Bachelor of Technology",
+      "major": "Computer Science",
+      "year": "2021"
+    }
+  ],
+  "socialLinks": [
+    "https://github.com/johndoe"
+  ],
+  "certificates": [
+    {
+      "name": "Full Stack Development",
+      "from": "Tech Academy",
+      "year": 2023
+    }
+  ]
+}
+
+###
+
+### Seed sellers
+PUT {{baseUrl}}/{{urlPath}}/seller/seed/10
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{}
+
+
+# There are exactly 6 seller gateway routes:
+
+# Seller routes
+# Method	Endpoint	Auth
+# GET	/seller/id/:sellerId	Required
+# GET	/seller/username/:username	Required
+# GET	/seller/random/:size	Required
+# POST	/seller/create	Required
+# PUT	/seller/:sellerId	Required
+# PUT	/seller/seed/:count	Required
+
+
+# GET  /seller/id/:sellerId
+# GET  /seller/username/:username
+# GET  /seller/random/:size
+# POST /seller/create
+# PUT  /seller/:sellerId
+# PUT  /seller/seed/:count

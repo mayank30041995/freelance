@@ -370,7 +370,7 @@ services:
       - AP_GATEWAY_URL=http://gateway_container:4000
       - CLIENT_URL=http://localhost:3000
       - RABBITMQ_ENDPOINT=amqp://jobber:jobberpass@rabbitmq_container:5672
-      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_API_KEY=YOUR_STRIPE_API_KEY
       - CLOUD_NAME=my-media-mayank
       - CLOUD_API_KEY=541472569283563
       - CLOUD_API_SECRET=IWwGzQ-uv6_stQMtCE0G9KH7kQo

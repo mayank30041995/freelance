@@ -1,0 +1,410 @@
+@baseUrl = http://localhost:4000
+@urlPath = api/gateway/v1
+
+# ============================================================
+# CHAT SERVICE - API TEST FILE
+# ============================================================
+#
+# Gateway:
+#   http://localhost:4000
+#
+# Public base path:
+#   /api/gateway/v1
+#
+# Chat endpoints:
+#   GET    /message/conversation/:senderUsername/:receiverUsername
+#   GET    /message/conversations/:username
+#   GET    /message/:senderUsername/:receiverUsername
+#   GET    /message/:conversationId
+#   POST   /message
+#   PUT    /message/offer
+#   PUT    /message/mark-as-read
+#   PUT    /message/mark-multiple-as-read
+#
+# ============================================================
+
+
+# ============================================================
+# VARIABLES
+# ============================================================
+
+@senderUsername = Panny
+@receiverUsername = Lanny
+@conversationId = 1234567890
+@messageId = 6abe435e4f46188f407300dd
+
+@sellerId = 6547ee17bac1c154d4346060
+@buyerId = 6ab11939df8009bb23d7c81b
+
+@senderPicture = https://example.com/profile.jpg
+@receiverPicture = https://example.com/profile.jpg
+
+@gigId = 6abcf26a4f0f733dbb4f701d
+
+
+# ============================================================
+# COMMON HEADERS
+# ============================================================
+
+###
+# Content-Type: application/json
+# Accept: application/json
+# withCredentials:true
+
+
+# ============================================================
+# 1. GET CONVERSATION
+# ============================================================
+#
+# Gets conversation records between two users.
+#
+# Controller:
+#   conversation()
+#
+# Service:
+#   getConversation(senderUsername, receiverUsername)
+#
+# ============================================================
+
+GET {{baseUrl}}/{{urlPath}}/message/conversation/{{senderUsername}}/{{receiverUsername}}
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+
+# ============================================================
+# 2. GET USER CONVERSATION LIST
+# ============================================================
+#
+# Gets the latest message from each conversation
+# belonging to the specified username.
+#
+# Controller:
+#   conversationList()
+#
+# Service:
+#   getUserConversationList(username)
+#
+# ============================================================
+
+###
+GET {{baseUrl}}/{{urlPath}}/message/conversations/{{senderUsername}}
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+
+# ============================================================
+# 3. GET MESSAGES BETWEEN TWO USERS
+# ============================================================
+#
+# Gets all messages exchanged between sender and receiver.
+#
+# Controller:
+#   messages()
+#
+# Service:
+#   getMessages(senderUsername, receiverUsername)
+#
+# ============================================================
+
+###
+GET {{baseUrl}}/{{urlPath}}/message/{{senderUsername}}/{{receiverUsername}}
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+
+# ============================================================
+# 4. GET MESSAGES BY CONVERSATION ID
+# ============================================================
+#
+# Gets all messages belonging to one conversation.
+#
+# Controller:
+#   userMessages()
+#
+# Service:
+#   getUserMessages(conversationId)
+#
+# ============================================================
+
+###
+GET {{baseUrl}}/{{urlPath}}/message/{{conversationId}}
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+
+# ============================================================
+# 5. CREATE / SEND MESSAGE
+# ============================================================
+#
+# Required by messageSchema:
+#
+#   sellerId
+#   buyerId
+#   senderUsername
+#   senderPicture
+#   receiverUsername
+#   receiverPicture
+#
+# Optional:
+#
+#   conversationId
+#   body
+#   hasConversationId
+#   file
+#   fileType
+#   fileName
+#   fileSize
+#   gigId
+#   isRead
+#   hasOffer
+#   offer
+#   createdAt
+#
+# If hasConversationId is false/absent:
+#   Chat Service creates a conversation.
+#
+# ============================================================
+
+###
+POST {{baseUrl}}/{{urlPath}}/message
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "conversationId": "1234567890",
+  "body": "Hello, I would like to discuss this gig.",
+  "hasConversationId": true,
+
+  "file": "",
+  "fileType": "",
+  "fileName": "",
+  "fileSize": "",
+
+  "gigId": "{{gigId}}",
+
+  "sellerId": "{{sellerId}}",
+  "buyerId": "{{buyerId}}",
+
+  "senderUsername": "{{senderUsername}}",
+  "senderPicture": "{{senderPicture}}",
+
+  "receiverUsername": "{{receiverUsername}}",
+  "receiverPicture": "{{receiverPicture}}",
+
+  "isRead": false,
+  "hasOffer": false
+}
+
+
+# ============================================================
+# 6. CREATE FIRST MESSAGE / CREATE CONVERSATION
+# ============================================================
+#
+# Use this when you want Chat Service to create a new
+# conversation automatically.
+#
+# hasConversationId is false.
+#
+# conversationId must still be supplied because the controller
+# passes it to createConversation().
+#
+# ============================================================
+
+###
+POST {{baseUrl}}/{{urlPath}}/message
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "conversationId": "1234567890",
+  "body": "Hello, this is a new conversation.",
+
+  "hasConversationId": false,
+
+  "file": "",
+  "fileType": "",
+  "fileName": "",
+  "fileSize": "",
+
+  "gigId": "{{gigId}}",
+
+  "sellerId": "{{sellerId}}",
+  "buyerId": "{{buyerId}}",
+
+  "senderUsername": "{{senderUsername}}",
+  "senderPicture": "{{senderPicture}}",
+
+  "receiverUsername": "{{receiverUsername}}",
+  "receiverPicture": "{{receiverPicture}}",
+
+  "isRead": false,
+  "hasOffer": false
+}
+
+
+# ============================================================
+# 7. SEND MESSAGE WITH OFFER
+# ============================================================
+#
+# hasOffer = true
+#
+# Offer fields supported by messageSchema:
+#
+#   gigTitle
+#   price
+#   description
+#   deliveryInDays
+#   oldDeliveryDate
+#   newDeliveryDate
+#   accepted
+#   cancelled
+#
+# Chat Service also publishes an order-email message when
+# data.hasOffer is true.
+#
+# ============================================================
+
+###
+POST {{baseUrl}}/{{urlPath}}/message
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "conversationId": "{{conversationId}}",
+  "body": "Here is the offer for the project.",
+  "hasConversationId": true,
+
+  "file": "",
+  "fileType": "",
+  "fileName": "",
+  "fileSize": "",
+
+  "gigId": "{{gigId}}",
+
+  "sellerId": "{{sellerId}}",
+  "buyerId": "{{buyerId}}",
+
+  "senderUsername": "{{senderUsername}}",
+  "senderPicture": "{{senderPicture}}",
+
+  "receiverUsername": "{{receiverUsername}}",
+  "receiverPicture": "{{receiverPicture}}",
+
+  "isRead": false,
+  "hasOffer": true,
+
+  "offer": {
+    "gigTitle": "Node.js API Development",
+    "price": 50,
+    "description": "I will build the requested Node.js API.",
+    "deliveryInDays": 3,
+    "oldDeliveryDate": "",
+    "newDeliveryDate": "",
+    "accepted": false,
+    "cancelled": false
+  }
+}
+
+
+# ============================================================
+# 8. UPDATE OFFER
+# ============================================================
+#
+# Updates:
+#
+#   offer.<type> = true
+#
+# Example:
+#
+#   type = accepted
+#   type = cancelled
+#
+# ============================================================
+
+###
+PUT {{baseUrl}}/{{urlPath}}/message/offer
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "messageId": "{{messageId}}",
+  "type": "accepted"
+}
+
+
+# ============================================================
+# 9. MARK SINGLE MESSAGE AS READ
+# ============================================================
+#
+# Sets:
+#
+#   isRead = true
+#
+# ============================================================
+
+###
+PUT {{baseUrl}}/{{urlPath}}/message/mark-as-read
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "messageId": "{{messageId}}"
+}
+
+
+# ============================================================
+# 10. MARK MULTIPLE MESSAGES AS READ
+# ============================================================
+#
+# Marks all unread messages matching:
+#
+#   senderUsername
+#   receiverUsername
+#   isRead = false
+#
+# messageId is then used to fetch one message for the response.
+#
+# ============================================================
+
+###
+PUT {{baseUrl}}/{{urlPath}}/message/mark-multiple-as-read
+Content-Type: application/json
+Accept: application/json
+withCredentials:true
+
+{
+  "messageId": "{{messageId}}",
+  "senderUsername": "{{senderUsername}}",
+  "receiverUsername": "{{receiverUsername}}"
+}
+
+
+# ============================================================
+# RECOMMENDED TEST ORDER
+# ============================================================
+#
+# 1. GET conversation
+# 2. GET conversation list
+# 3. GET messages between users
+# 4. POST new message with hasConversationId=false
+# 5. GET conversation again
+# 6. GET messages again
+# 7. POST message with offer
+# 8. PUT /message/offer
+# 9. PUT /message/mark-as-read
+# 10. PUT /message/mark-multiple-as-read
+# 11. GET /message/:conversationId
+#
+# ============================================================
+# ```
+
+# [/writing block]
