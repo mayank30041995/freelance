@@ -1,11 +1,17 @@
 apm-server:
-  host: "apm_server_container:8200"
+  host: "0.0.0.0:8200"
+
+  kibana:
+    enabled: true
+    host: "http://kibana_container:5601"
+    username: "kibana_system"
+    password: "kibana123"
 
 auth:
   secret_token: ""
 
 output.elasticsearch:
-  hosts: "http://elasticsearch_container:9200"
+  hosts: ["http://elasticsearch_container:9200"]
   enabled: true
   protocol: "http"
   username: "elastic"
@@ -18,4 +24,7 @@ monitoring.elasticsearch:
   protocol: "http"
   username: "elastic"
   password: "admin1234"
-  hosts: "http://elasticsearch_container:9200"
+  hosts: ["http://elasticsearch_container:9200"]
+
+# npm install elastic-apm-node --save
+# docker compose up -d apmServer
