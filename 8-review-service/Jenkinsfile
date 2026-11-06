@@ -7,45 +7,117 @@ def groovyMethods
 
 m1 = System.currentTimeMillis()
 
+
 pipeline {
-  agent {
-    label 'Jenkins-Agent'
-  }
-
-  tools {
-    nodejs "NodeJS"
-    dockerTool "Docker"
-  }
-
-  environment {
-    DOCKER_CREDENTIALS = credentials("dockerhub")
-    IMAGE_NAME = "mayank30041995" + "/" + "jobber-review"
-    IMAGE_TAG = "stable-${BUILD_NUMBER}"
-  }
-
-  stages {
-
-    stage("Cleanup Workspace") {
-      steps {
-        cleanWs()
-      }
+    agent {
+        label 'Jenkins-Agent'
     }
 
-    stage("Prepare Environment") {
-      steps {
-        // Checkout the Reviews microservice repository
-        git branch: 'main',
-            credentialsId: 'github',
-            url: 'https://github.com/mayank30041995/freelance.git'
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
 
-        // Move into the Reviews microservice directory
-        dir('8-review-service') {
-          sh 'npm install'
+    tools {
+        nodejs 'NodeJS'
+    }
+
+    environment {
+        IMAGE_NAME = 'mayank30041995/jobber-review'
+        IMAGE_TAG = "stable-${BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
         }
-      }
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    credentialsId: 'github',
+                    url: 'https://github.com/mayank30041995/freelance.git'
+            }
+        }
+
+        stage('Verify Node and NPM') {
+            steps {
+                sh '''
+                    node --version
+                    npm --version
+
+                    npm_major=$(npm --version | cut -d. -f1)
+
+                    test "$npm_major" = "11" || {
+                        echo "Expected npm 11"
+                        exit 1
+                    }
+                '''
+            }
+        }
+
+        stage('Prepare Environment') {
+            steps {
+                dir('8-review-service') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'github-packages-token',
+                            variable: 'GITHUB_PACKAGES_TOKEN'
+                        )
+                    ]) {
+                        sh '''
+                            echo "Installing dependencies..."
+                            npm ci
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Lint Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run lint:check'
+                }
+            }
+        }
+
+        stage('Code Format Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run prettier:check'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run test'
+                }
+            }
+        }
     }
-  }
+
+    post {
+        success {
+            echo 'Jobber Reviews pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+        }
+
+        always {
+            echo "Build number: ${BUILD_NUMBER}"
+            echo "Build result: ${currentBuild.currentResult}"
+        }
+    }
 }
+
 
 
 //     stage("Prepare Environment") {
