@@ -6,12 +6,7 @@ import { winstonLogger } from '@mayank30041995/jobber-shared';
 
 const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'reviewServiceProducer', 'debug');
 
-export const publishFanoutMessage = async (
-  channel: Channel,
-  exchangeName: string,
-  message: string,
-  logMessage: string
-): Promise<void> => {
+export const publishFanoutMessage = async (channel: Channel, exchangeName: string, message: string, logMessage: string): Promise<void> => {
   try {
     if (!channel) {
       channel = (await createConnection()) as Channel;
