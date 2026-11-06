@@ -1,6 +1,6 @@
 import { Client, estypes } from '@elastic/elasticsearch';
 import { config } from '@review/config';
-import { ISellerGig, winstonLogger } from '@mayank30041995/jobber-shared';
+import { winstonLogger } from '@mayank30041995/jobber-shared';
 import { Logger } from 'winston';
 
 type ClusterHealthResponse = estypes.ClusterHealthResponse;
