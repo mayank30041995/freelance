@@ -7,8 +7,6 @@ def groovyMethods
 
 m1 = System.currentTimeMillis()
 
-
-
 pipeline {
     agent {
         label 'Jenkins-Agent'
@@ -26,6 +24,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'mayank30041995/jobber-review'
         IMAGE_TAG = "stable-${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     }
 
     stages {
@@ -41,21 +40,37 @@ pipeline {
                 git branch: 'main',
                     credentialsId: 'github',
                     url: 'https://github.com/mayank30041995/freelance.git'
+
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Git Commit: ${env.GIT_COMMIT_SHORT}"
+                }
             }
         }
 
         stage('Verify Node and NPM') {
             steps {
                 sh '''
+                    set -eu
+
+                    echo "Node version:"
                     node --version
+
+                    echo "NPM version:"
                     npm --version
 
                     npm_major=$(npm --version | cut -d. -f1)
 
-                    test "$npm_major" = "11" || {
-                        echo "Expected npm 11"
+                    if [ "$npm_major" != "11" ]; then
+                        echo "ERROR: Expected npm 11"
                         exit 1
-                    }
+                    fi
+
+                    echo "Node and NPM verification successful."
                 '''
             }
         }
@@ -81,10 +96,13 @@ pipeline {
                             cat > .npmrc <<EOF
 @mayank30041995:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
-always-auth=true
 EOF
 
+                            echo "Installing dependencies..."
+
                             npm ci
+
+                            echo "Dependencies installed successfully."
                         '''
                     }
                 }
@@ -114,11 +132,66 @@ EOF
                 }
             }
         }
+
+        stage('Build and Push') {
+            steps {
+                dir('8-review-service') {
+                    sh '''
+                        set -eu
+
+                        echo "Logging in to Docker Hub..."
+
+                        echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login \
+                            -u "$DOCKERHUB_CREDENTIALS_USR" \
+                            --password-stdin
+
+                        docker_logout_cleanup() {
+                            docker logout || true
+                        }
+
+                        trap docker_logout_cleanup EXIT
+
+                        echo "Building Docker image..."
+
+                        docker build \
+                            -t "$IMAGE_NAME:$IMAGE_TAG" .
+
+                        echo "Creating additional image tags..."
+
+                        docker tag \
+                            "$IMAGE_NAME:$IMAGE_TAG" \
+                            "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                        docker tag \
+                            "$IMAGE_NAME:$IMAGE_TAG" \
+                            "$IMAGE_NAME:stable"
+
+                        echo "Pushing build-specific image..."
+
+                        docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+                        echo "Pushing Git commit image..."
+
+                        docker push "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                        echo "Pushing stable image..."
+
+                        docker push "$IMAGE_NAME:stable"
+
+                        echo "All Docker images pushed successfully."
+                    '''
+                }
+            }
+        }
     }
 
     post {
+
         success {
             echo 'Jobber Reviews pipeline completed successfully.'
+            echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
+            echo "Stable Image: ${IMAGE_NAME}:stable"
         }
 
         failure {
@@ -126,8 +199,16 @@ EOF
         }
 
         always {
-            echo "Build number: ${BUILD_NUMBER}"
-            echo "Build result: ${currentBuild.currentResult}"
+            script {
+                echo "Build number: ${BUILD_NUMBER}"
+                echo "Build result: ${currentBuild.currentResult}"
+
+                sh '''
+                    docker image rm "$IMAGE_NAME:$IMAGE_TAG" || true
+                    docker image rm "$IMAGE_NAME:stable" || true
+                    docker image rm "$IMAGE_NAME:$GIT_COMMIT_SHORT" || true
+                '''
+            }
         }
     }
 }
