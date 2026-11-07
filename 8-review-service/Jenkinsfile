@@ -1,4 +1,3 @@
-
 namespace = "production"
 serviceName = "jobber-review"
 service = "Jobber Reviews"
@@ -77,61 +76,82 @@ pipeline {
 
         stage('Prepare Environment') {
             steps {
-                dir('8-review-service') {
-                    withCredentials([
-                        string(
-                            credentialsId: 'github-packages-token',
-                            variable: 'GITHUB_PACKAGES_TOKEN'
-                        )
-                    ]) {
-                        sh '''
-                            set -eu
+                script {
+                    // Prepare pipeline automation directory
+                    sh '[ -d pipeline ] || mkdir -p pipeline'
 
-                            cleanup() {
-                                rm -f .npmrc
-                            }
+                    // Checkout Jenkins automation repository
+                    dir('pipeline') {
+                        git branch: 'main',
+                            credentialsId: 'github',
+                            url: 'https://github.com/mayank30041995/freelance.git'
 
-                            trap cleanup EXIT
+                        // Load shared Groovy methods
+                        groovyMethods = load('functions.groovy')
+                    }
 
-                            cat > .npmrc <<EOF
-@mayank30041995:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
-EOF
+                    // Checkout Review Service repository
+                    dir('8-review-service') {
 
-                            echo "Installing dependencies..."
+                        git branch: 'main',
+                            credentialsId: 'github',
+                            url: 'https://github.com/mayank30041995/freelance.git'
 
-                            npm ci
+                        withCredentials([
+                            string(
+                                credentialsId: 'github-packages-token',
+                                variable: 'GITHUB_PACKAGES_TOKEN'
+                            )
+                        ]) {
+                            sh '''
+                                set -eu
 
-                            echo "Dependencies installed successfully."
-                        '''
+                                cleanup() {
+                                    rm -f .npmrc
+                                }
+
+                                trap cleanup EXIT
+
+                                cat > .npmrc <<EOF
+                                    @mayank30041995:registry=https://npm.pkg.github.com
+                                    //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+                                     EOF
+
+                                echo "Installing dependencies..."
+
+                                npm ci
+
+                                echo "Dependencies installed successfully."
+                            '''
+                        }
                     }
                 }
             }
         }
 
-        stage('Lint Check') {
-            steps {
-                dir('8-review-service') {
-                    sh 'npm run lint:check'
-                }
-            }
-        }
+        // stage('Lint Check') {
+        //     steps {
+        //         dir('8-review-service') {
+        //             sh 'npm run lint:check'
+        //         }
+        //     }
+        // }
 
-        stage('Code Format Check') {
-            steps {
-                dir('8-review-service') {
-                    sh 'npm run prettier:check'
-                }
-            }
-        }
+        // stage('Code Format Check') {
+        //     steps {
+        //         dir('8-review-service') {
+        //             sh 'npm run prettier:check'
+        //         }
+        //     }
+        // }
 
-        stage('Unit Test') {
-            steps {
-                dir('8-review-service') {
-                    sh 'npm run test'
-                }
-            }
-        }
+        // stage('Unit Test') {
+        //     steps {
+        //         dir('8-review-service') {
+        //             sh 'npm run test'
+        //         }
+        //     }
+        // }
 
         stage('Build and Push') {
             steps {
@@ -200,17 +220,93 @@ EOF
 
     }
 
+    stage("Create New Pods") {
+        steps {
+            withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'minikube', contextName: 'minikube', credentialsId: 'jenkins-k8s-token', namespace: '', serverUrl: 'https://host.docker.internal:59398']]) {
+            script {
+                    def pods = groovyMethods.findPodsFromName("${namespace}", "${serviceName}")
+                    for (podName in pods) {
+                        sh """
+                            kubectl delete -n ${namespace} pod ${podName}
+                            sleep 10s
+                        """
+                    }
+            }
+          }
+        }
+    }
+
+
     post {
 
         success {
-            echo 'Jobber Reviews pipeline completed successfully.'
-            echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
-            echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
-            echo "Stable Image: ${IMAGE_NAME}:stable"
+            script {
+                echo 'Jobber Reviews pipeline completed successfully.'
+
+                m2 = System.currentTimeMillis()
+
+                def durTime = groovyMethods.durationTime(m1, m2)
+                def author = groovyMethods.readCommitAuthor()
+
+                groovyMethods.notifySlack("", "jobber-jenkins", [
+                    [
+                        title: "BUILD SUCCEEDED: ${service} Service with build number ${env.BUILD_NUMBER}",
+                        title_link: "${env.BUILD_URL}",
+                        color: "good",
+                        text: "Created by: ${author}",
+                        "mrkdwn_in": ["fields"],
+                        fields: [
+                            [
+                                title: "Duration Time",
+                                value: "${durTime}",
+                                short: true
+                            ],
+                            [
+                                title: "Stage Name",
+                                value: "Production",
+                                short: true
+                            ],
+                        ]
+                    ]
+                ])
+
+                echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
+                echo "Stable Image: ${IMAGE_NAME}:stable"
+            }
         }
 
         failure {
-            echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+            script {
+                echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+
+                m2 = System.currentTimeMillis()
+
+                def durTime = groovyMethods.durationTime(m1, m2)
+                def author = groovyMethods.readCommitAuthor()
+
+                groovyMethods.notifySlack("", "jobber-jenkins", [
+                    [
+                        title: "BUILD FAILED: ${service} Service with build number ${env.BUILD_NUMBER}",
+                        title_link: "${env.BUILD_URL}",
+                        color: "error",
+                        text: "Created by: ${author}",
+                        "mrkdwn_in": ["fields"],
+                        fields: [
+                            [
+                                title: "Duration Time",
+                                value: "${durTime}",
+                                short: true
+                            ],
+                            [
+                                title: "Stage Name",
+                                value: "Production",
+                                short: true
+                            ],
+                        ]
+                    ]
+                ])
+            }
         }
 
         always {

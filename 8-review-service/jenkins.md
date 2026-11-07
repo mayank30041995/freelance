@@ -1,0 +1,610 @@
+namespace = "production"
+serviceName = "jobber-review"
+service = "Jobber Reviews"
+
+def groovyMethods
+
+m1 = System.currentTimeMillis()
+
+pipeline {
+agent {
+label 'Jenkins-Agent'
+}
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
+
+    tools {
+        nodejs 'NodeJS'
+    }
+
+    environment {
+        IMAGE_NAME = 'mayank30041995/jobber-review'
+        IMAGE_TAG = "stable-${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+    }
+
+    stages {
+
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    credentialsId: 'github',
+                    url: 'https://github.com/mayank30041995/freelance.git'
+
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Git Commit: ${env.GIT_COMMIT_SHORT}"
+                }
+            }
+        }
+
+        stage('Verify Node and NPM') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "Node version:"
+                    node --version
+
+                    echo "NPM version:"
+                    npm --version
+
+                    npm_major=$(npm --version | cut -d. -f1)
+
+                    if [ "$npm_major" != "11" ]; then
+                        echo "ERROR: Expected npm 11"
+                        exit 1
+                    fi
+
+                    echo "Node and NPM verification successful."
+                '''
+            }
+        }
+
+        stage('Prepare Environment') {
+            steps {
+                dir('8-review-service') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'github-packages-token',
+                            variable: 'GITHUB_PACKAGES_TOKEN'
+                        )
+                    ]) {
+                        sh '''
+                            set -eu
+
+                            cleanup() {
+                                rm -f .npmrc
+                            }
+
+                            trap cleanup EXIT
+
+                            cat > .npmrc <<EOF
+
+@mayank30041995:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+EOF
+
+                            echo "Installing dependencies..."
+
+                            npm ci
+
+                            echo "Dependencies installed successfully."
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Lint Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run lint:check'
+                }
+            }
+        }
+
+        stage('Code Format Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run prettier:check'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run test'
+                }
+            }
+        }
+
+        stage('Build and Push') {
+            steps {
+                dir('8-review-service') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'github-packages-token',
+                            variable: 'GITHUB_PACKAGES_TOKEN'
+                        )
+                    ]) {
+                        sh '''
+                            set -eu
+
+                            echo "Preparing temporary npm authentication..."
+
+                            cat > .npmrc <<EOF
+                            @mayank30041995:registry=https://npm.pkg.github.com
+                            //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+                            EOF
+
+                            cleanup() {
+                                rm -f .npmrc
+                                docker logout || true
+                            }
+
+                            trap cleanup EXIT
+
+                            echo "Logging in to Docker Hub..."
+
+                            echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login \
+                                -u "$DOCKERHUB_CREDENTIALS_USR" \
+                                --password-stdin
+
+                            echo "Building Docker image..."
+
+                            docker build \
+                                --secret id=npmrc,src=.npmrc \
+                                -t "$IMAGE_NAME:$IMAGE_TAG" .
+
+                            echo "Creating additional image tags..."
+
+                            docker tag "$IMAGE_NAME:$IMAGE_TAG" \
+                                "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                            docker tag "$IMAGE_NAME:$IMAGE_TAG" \
+                                "$IMAGE_NAME:stable"
+
+                            echo "Pushing build-specific image..."
+
+                            docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+                            echo "Pushing Git commit image..."
+
+                            docker push "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                            echo "Pushing stable image..."
+
+                            docker push "$IMAGE_NAME:stable"
+
+                            echo "All Docker images pushed successfully."
+                        '''
+                    }
+                }
+            }
+        }
+
+    }
+
+    post {
+
+        success {
+            echo 'Jobber Reviews pipeline completed successfully.'
+            echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
+            echo "Stable Image: ${IMAGE_NAME}:stable"
+        }
+
+        failure {
+            echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+        }
+
+        always {
+            script {
+                echo "Build number: ${BUILD_NUMBER}"
+                echo "Build result: ${currentBuild.currentResult}"
+
+                sh '''
+                    docker image rm "$IMAGE_NAME:$IMAGE_TAG" || true
+                    docker image rm "$IMAGE_NAME:stable" || true
+                    docker image rm "$IMAGE_NAME:$GIT_COMMIT_SHORT" || true
+                '''
+            }
+        }
+    }
+
+}
+
+###########################################
+##########################################
+
+staging
+####################################
+
+namespace = "production"
+serviceName = "jobber-review"
+service = "Jobber Reviews"
+
+def groovyMethods
+
+m1 = System.currentTimeMillis()
+
+pipeline {
+agent {
+label 'Jenkins-Agent'
+}
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
+
+    tools {
+        nodejs 'NodeJS'
+    }
+
+    environment {
+        IMAGE_NAME = 'mayank30041995/jobber-review'
+        IMAGE_TAG = "stable-${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+    }
+
+    stages {
+
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    credentialsId: 'github',
+                    url: 'https://github.com/mayank30041995/freelance.git'
+
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Git Commit: ${env.GIT_COMMIT_SHORT}"
+                }
+            }
+        }
+
+        stage('Verify Node and NPM') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "Node version:"
+                    node --version
+
+                    echo "NPM version:"
+                    npm --version
+
+                    npm_major=$(npm --version | cut -d. -f1)
+
+                    if [ "$npm_major" != "11" ]; then
+                        echo "ERROR: Expected npm 11"
+                        exit 1
+                    fi
+
+                    echo "Node and NPM verification successful."
+                '''
+            }
+        }
+        // versoin 1.0.0
+        // stage('Prepare Environment') {
+        //     steps {
+        //         dir('8-review-service') {
+        //             withCredentials([
+        //                 string(
+        //                     credentialsId: 'github-packages-token',
+        //                     variable: 'GITHUB_PACKAGES_TOKEN'
+        //                 )
+        //             ]) {
+        //                 sh '''
+        //                     set -eu
+
+        //                     cleanup() {
+        //                         rm -f .npmrc
+        //                     }
+
+        //                     trap cleanup EXIT
+
+        //                     cat > .npmrc <<EOF
+
+        //                         @mayank30041995:registry=https://npm.pkg.github.com
+        //                         //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+        //                         EOF
+
+        //                     echo "Installing dependencies..."
+
+        //                     npm ci
+
+        //                     echo "Dependencies installed successfully."
+        //                 '''
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Prepare Environment') {
+            steps {
+                script {
+                    // Prepare pipeline automation directory
+                    sh '[ -d pipeline ] || mkdir -p pipeline'
+
+                    // Checkout Jenkins automation repository
+                    dir('pipeline') {
+                        git branch: 'main',
+                            credentialsId: 'github',
+                            url: 'https://github.com/mayank30041995/freelance.git'
+
+                        // Load shared Groovy methods
+                        groovyMethods = load('functions.groovy')
+                    }
+
+                    // Checkout Review Service repository
+                    dir('8-review-service') {
+
+                        git branch: 'main',
+                            credentialsId: 'github',
+                            url: 'https://github.com/mayank30041995/freelance.git'
+
+                        withCredentials([
+                            string(
+                                credentialsId: 'github-packages-token',
+                                variable: 'GITHUB_PACKAGES_TOKEN'
+                            )
+                        ]) {
+                            sh '''
+                                set -eu
+
+                                cleanup() {
+                                    rm -f .npmrc
+                                }
+
+                                trap cleanup EXIT
+
+                                cat > .npmrc <<EOF
+                                    @mayank30041995:registry=https://npm.pkg.github.com
+                                    //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+                                     EOF
+
+                                echo "Installing dependencies..."
+
+                                npm ci
+
+                                echo "Dependencies installed successfully."
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Lint Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run lint:check'
+                }
+            }
+        }
+
+        stage('Code Format Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run prettier:check'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run test'
+                }
+            }
+        }
+
+        stage('Build and Push') {
+            steps {
+                dir('8-review-service') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'github-packages-token',
+                            variable: 'GITHUB_PACKAGES_TOKEN'
+                        )
+                    ]) {
+                        sh '''
+                            set -eu
+
+                            echo "Preparing temporary npm authentication..."
+
+                            cat > .npmrc <<EOF
+                            @mayank30041995:registry=https://npm.pkg.github.com
+                            //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+                            EOF
+
+                            cleanup() {
+                                rm -f .npmrc
+                                docker logout || true
+                            }
+
+                            trap cleanup EXIT
+
+                            echo "Logging in to Docker Hub..."
+
+                            echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login \
+                                -u "$DOCKERHUB_CREDENTIALS_USR" \
+                                --password-stdin
+
+                            echo "Building Docker image..."
+
+                            docker build \
+                                --secret id=npmrc,src=.npmrc \
+                                -t "$IMAGE_NAME:$IMAGE_TAG" .
+
+                            echo "Creating additional image tags..."
+
+                            docker tag "$IMAGE_NAME:$IMAGE_TAG" \
+                                "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                            docker tag "$IMAGE_NAME:$IMAGE_TAG" \
+                                "$IMAGE_NAME:stable"
+
+                            echo "Pushing build-specific image..."
+
+                            docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+                            echo "Pushing Git commit image..."
+
+                            docker push "$IMAGE_NAME:$GIT_COMMIT_SHORT"
+
+                            echo "Pushing stable image..."
+
+                            docker push "$IMAGE_NAME:stable"
+
+                            echo "All Docker images pushed successfully."
+                        '''
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    post {
+
+        success {
+            script {
+                echo 'Jobber Reviews pipeline completed successfully.'
+
+                m2 = System.currentTimeMillis()
+
+                def durTime = groovyMethods.durationTime(m1, m2)
+                def author = groovyMethods.readCommitAuthor()
+
+                groovyMethods.notifySlack("", "jobber-jenkins", [
+                    [
+                        title: "BUILD SUCCEEDED: ${service} Service with build number ${env.BUILD_NUMBER}",
+                        title_link: "${env.BUILD_URL}",
+                        color: "good",
+                        text: "Created by: ${author}",
+                        "mrkdwn_in": ["fields"],
+                        fields: [
+                            [
+                                title: "Duration Time",
+                                value: "${durTime}",
+                                short: true
+                            ],
+                            [
+                                title: "Stage Name",
+                                value: "Production",
+                                short: true
+                            ],
+                        ]
+                    ]
+                ])
+
+                echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
+                echo "Stable Image: ${IMAGE_NAME}:stable"
+            }
+        }
+
+        failure {
+            script {
+                echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+
+                m2 = System.currentTimeMillis()
+
+                def durTime = groovyMethods.durationTime(m1, m2)
+                def author = groovyMethods.readCommitAuthor()
+
+                groovyMethods.notifySlack("", "jobber-jenkins", [
+                    [
+                        title: "BUILD FAILED: ${service} Service with build number ${env.BUILD_NUMBER}",
+                        title_link: "${env.BUILD_URL}",
+                        color: "error",
+                        text: "Created by: ${author}",
+                        "mrkdwn_in": ["fields"],
+                        fields: [
+                            [
+                                title: "Duration Time",
+                                value: "${durTime}",
+                                short: true
+                            ],
+                            [
+                                title: "Stage Name",
+                                value: "Production",
+                                short: true
+                            ],
+                        ]
+                    ]
+                ])
+            }
+        }
+
+        always {
+            script {
+                echo "Build number: ${BUILD_NUMBER}"
+                echo "Build result: ${currentBuild.currentResult}"
+
+                sh '''
+                    docker image rm "$IMAGE_NAME:$IMAGE_TAG" || true
+                    docker image rm "$IMAGE_NAME:stable" || true
+                    docker image rm "$IMAGE_NAME:$GIT_COMMIT_SHORT" || true
+                '''
+            }
+        }
+    }
+
+    // versoin 1.0.0
+    // post {
+
+    //     success {
+    //         echo 'Jobber Reviews pipeline completed successfully.'
+    //         echo "Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+    //         echo "Git Commit Image: ${IMAGE_NAME}:${GIT_COMMIT_SHORT}"
+    //         echo "Stable Image: ${IMAGE_NAME}:stable"
+    //     }
+
+    //     failure {
+    //         echo 'Jobber Reviews pipeline failed. Check the stage logs.'
+    //     }
+
+    //     always {
+    //         script {
+    //             echo "Build number: ${BUILD_NUMBER}"
+    //             echo "Build result: ${currentBuild.currentResult}"
+
+    //             sh '''
+    //                 docker image rm "$IMAGE_NAME:$IMAGE_TAG" || true
+    //                 docker image rm "$IMAGE_NAME:stable" || true
+    //                 docker image rm "$IMAGE_NAME:$GIT_COMMIT_SHORT" || true
+    //             '''
+    //         }
+    //     }
+    // }
+
+}
