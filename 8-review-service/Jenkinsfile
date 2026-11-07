@@ -1,10 +1,13 @@
-namespace = "production"
-serviceName = "jobber-review"
-service = "Jobber Reviews"
+
+import groovy.transform.Field
+
+@Field long m1 = System.currentTimeMillis()
 
 def groovyMethods
 
-m1 = System.currentTimeMillis()
+namespace = "production"
+serviceName = "jobber-review"
+service = "Jobber Reviews"
 
 pipeline {
     agent {
@@ -74,7 +77,6 @@ pipeline {
             }
         }
 
-
         stage('Prepare Environment') {
             steps {
                 script {
@@ -138,31 +140,6 @@ pipeline {
             }
         }
 
-
-        // stage('Lint Check') {
-        //     steps {
-        //         dir('8-review-service') {
-        //             sh 'npm run lint:check'
-        //         }
-        //     }
-        // }
-
-        // stage('Code Format Check') {
-        //     steps {
-        //         dir('8-review-service') {
-        //             sh 'npm run prettier:check'
-        //         }
-        //     }
-        // }
-
-        // stage('Unit Test') {
-        //     steps {
-        //         dir('8-review-service') {
-        //             sh 'npm run test'
-        //         }
-        //     }
-        // }
-
         stage('Build and Push') {
             steps {
                 dir('8-review-service') {
@@ -175,19 +152,19 @@ pipeline {
                         sh '''
                             set -eu
 
-                            echo "Preparing temporary npm authentication..."
-
-                            cat > .npmrc <<EOF
-                            @mayank30041995:registry=https://npm.pkg.github.com
-                            //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
-                            EOF
-
                             cleanup() {
                                 rm -f .npmrc
                                 docker logout || true
                             }
 
                             trap cleanup EXIT
+
+                            echo "Preparing Docker build authentication..."
+
+                            printf '%s\\n' \
+                                '@mayank30041995:registry=https://npm.pkg.github.com' \
+                                "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
+                                > .npmrc
 
                             echo "Logging in to Docker Hub..."
 
@@ -246,18 +223,25 @@ pipeline {
                             "${serviceName}"
                         )
 
-                        for (podName in pods) {
-                            sh """
-                                kubectl delete -n ${namespace} pod ${podName}
-                                sleep 10s
-                            """
+                        if (pods && !pods.isEmpty()) {
+                            echo "Found existing pods: ${pods}"
+
+                            for (podName in pods) {
+                                echo "Deleting pod: ${podName}"
+
+                                sh """
+                                    kubectl delete -n ${namespace} pod ${podName} --wait=true
+                                """
+                            }
+                        } else {
+                            echo "No existing pods found for ${serviceName}."
                         }
                     }
                 }
             }
         }
 
-    } // End stages
+    }
 
     post {
 
@@ -265,7 +249,7 @@ pipeline {
             script {
                 echo 'Jobber Reviews pipeline completed successfully.'
 
-                def m2 = System.currentTimeMillis()
+                long m2 = System.currentTimeMillis()
 
                 def durTime = groovyMethods.durationTime(m1, m2)
                 def author = groovyMethods.readCommitAuthor()
@@ -287,7 +271,7 @@ pipeline {
                                 title: "Stage Name",
                                 value: "Production",
                                 short: true
-                            ],
+                            ]
                         ]
                     ]
                 ])
@@ -302,7 +286,7 @@ pipeline {
             script {
                 echo 'Jobber Reviews pipeline failed. Check the stage logs.'
 
-                m2 = System.currentTimeMillis()
+                long m2 = System.currentTimeMillis()
 
                 def durTime = groovyMethods.durationTime(m1, m2)
                 def author = groovyMethods.readCommitAuthor()
@@ -311,7 +295,7 @@ pipeline {
                     [
                         title: "BUILD FAILED: ${service} Service with build number ${env.BUILD_NUMBER}",
                         title_link: "${env.BUILD_URL}",
-                        color: "error",
+                        color: "danger",
                         text: "Created by: ${author}",
                         "mrkdwn_in": ["fields"],
                         fields: [
@@ -324,7 +308,7 @@ pipeline {
                                 title: "Stage Name",
                                 value: "Production",
                                 short: true
-                            ],
+                            ]
                         ]
                     ]
                 ])
