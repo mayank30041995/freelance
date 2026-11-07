@@ -74,21 +74,21 @@ pipeline {
             }
         }
 
+
         stage('Prepare Environment') {
             steps {
                 script {
-                    sh '[ -d pipeline ] || mkdir -p pipeline'
-
                     dir('pipeline') {
                         git branch: 'main',
                             credentialsId: 'github',
                             url: 'https://github.com/mayank30041995/freelance.git'
 
-                        groovyMethods = load('functions.groovy')
+                        groovyMethods = load(
+                            '10-jenkins-automation/functions.groovy'
+                        )
                     }
 
                     dir('8-review-service') {
-
                         git branch: 'main',
                             credentialsId: 'github',
                             url: 'https://github.com/mayank30041995/freelance.git'
@@ -108,10 +108,10 @@ pipeline {
 
                                 trap cleanup EXIT
 
-                                cat > .npmrc <<EOF
-                                    @mayank30041995:registry=https://npm.pkg.github.com
-                                    //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
-                                     EOF
+                                printf '%s\\n' \
+                                    '@mayank30041995:registry=https://npm.pkg.github.com' \
+                                    "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
+                                    > .npmrc
 
                                 echo "Installing dependencies..."
 
@@ -124,6 +124,7 @@ pipeline {
                 }
             }
         }
+
 
         // stage('Lint Check') {
         //     steps {

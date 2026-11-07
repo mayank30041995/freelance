@@ -1,49 +1,79 @@
+
 import groovy.json.JsonOutput
 
 def readCommitAuthor() {
-    sh '''#!/bin/bash
-        git rev-parse HEAD | tr '\n' ' ' > gitCommit
-        git show --format="%aN <%aE>" ${gitCommit} | head -1 | tr '\n' ' ' > gitCommitAuthor
-    '''
-    return readFile('gitCommitAuthor')
+    return sh(
+        script: "git show -s --format='%aN <%aE>' HEAD",
+        returnStdout: true
+    ).trim()
 }
 
 def durationTime(m1, m2) {
-    int timecase = m2 - m1
+    long elapsed = (m2 as long) - (m1 as long)
 
-    int seconds = (int) (timecase / 1000)
-    int minutes = (int) (timecase / (60*1000))
-    int hours = (int) (timecase / (1000*60*60))
+    if (elapsed < 0) {
+        error("End time cannot be earlier than start time")
+    }
 
-    return hours.mod(24) + "h " + minutes.mod(60) + "m " + seconds.mod(60) + "s"
+    long totalSeconds = (long) (elapsed / 1000)
+
+    long seconds = totalSeconds % 60
+    long minutes = (long) (totalSeconds / 60) % 60
+    long hours = (long) (totalSeconds / 3600)
+
+    return "${hours}h ${minutes}m ${seconds}s"
 }
 
 def findPodsFromName(String namespace, String name) {
-    podsAndImagesRaw = sh(
+    def podsRaw = sh(
         script: """
-            kubectl get pods -n ${namespace} --selector=app=${name} -o jsonpath='{range .items[*]}{.metadata.name}###'
+            kubectl get pods \
+                -n "${namespace}" \
+                -l "app=${name}" \
+                -o jsonpath='{range .items[*]}{.metadata.name}{"\\n"}{end}'
         """,
         returnStdout: true
     ).trim()
-    wantedPods = podsAndImagesRaw.split('###')
 
-    return wantedPods
+    if (!podsRaw) {
+        return []
+    }
+
+    return podsRaw.readLines()
 }
 
-def notifySlack(text, channel, attachments) {
-    // Get your own slack webhook url and token
-    def slackURL = ''
-    def jenkinsIcon = 'https://a.slack-edge.com/205a/img/services/jenkins-ci_72.png'
+def notifySlack(String text, String channel = '', List attachments = []) {
+
+    def jenkinsIcon =
+        'https://a.slack-edge.com/205a/img/services/jenkins-ci_72.png'
 
     def payload = JsonOutput.toJson([
-        text: text,
-        channel: channel,
-        username: "jenkins",
-        icon_url: jenkinsIcon,
+        text       : text,
+        username   : 'jenkins',
+        icon_url   : jenkinsIcon,
         attachments: attachments
     ])
 
-    sh "curl -s -X POST ${slackURL} -H 'Cache-Control: no-cache' -H 'Content-Type: application/json;charset=UTF-8' -d '${payload}'"
+    writeFile(
+        file: 'slack-payload.json',
+        text: payload
+    )
+
+    withCredentials([
+        string(
+            credentialsId: 'slack-webhook',
+            variable: 'SLACK_WEBHOOK'
+        )
+    ]) {
+        sh '''
+            set +x
+
+            curl --fail --silent --show-error \
+                -X POST "$SLACK_WEBHOOK" \
+                -H 'Content-Type: application/json' \
+                --data-binary @slack-payload.json
+        '''
+    }
 }
 
 return this
