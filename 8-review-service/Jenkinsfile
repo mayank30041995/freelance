@@ -100,8 +100,6 @@ pipeline {
                             )
                         ]) {
                             sh '''
-                               npm ci
-                               npm run build
                                 set -eu
 
                                 cleanup() {
@@ -109,6 +107,15 @@ pipeline {
                                 }
 
                                 trap cleanup EXIT
+
+                                echo "Checking project directory..."
+
+                                if [ ! -f package.json ]; then
+                                    echo "ERROR: package.json not found!"
+                                    echo "Current directory: $(pwd)"
+                                    ls -la
+                                    exit 1
+                                fi
 
                                 printf '%s\\n' \
                                     '@mayank30041995:registry=https://npm.pkg.github.com' \
@@ -119,7 +126,11 @@ pipeline {
 
                                 npm ci
 
-                                echo "Dependencies installed successfully."
+                                echo "Building application..."
+
+                                npm run build
+
+                                echo "Dependencies installed and build completed."
                             '''
                         }
                     }
