@@ -77,20 +77,16 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
-                    // Prepare pipeline automation directory
                     sh '[ -d pipeline ] || mkdir -p pipeline'
 
-                    // Checkout Jenkins automation repository
                     dir('pipeline') {
                         git branch: 'main',
                             credentialsId: 'github',
                             url: 'https://github.com/mayank30041995/freelance.git'
 
-                        // Load shared Groovy methods
                         groovyMethods = load('functions.groovy')
                     }
 
-                    // Checkout Review Service repository
                     dir('8-review-service') {
 
                         git branch: 'main',
@@ -218,24 +214,36 @@ pipeline {
             }
         }
 
-    }
+        stage('Create New Pods') {
+            steps {
+                withKubeCredentials(
+                    kubectlCredentials: [[
+                        caCertificate: '',
+                        clusterName: 'minikube',
+                        contextName: 'minikube',
+                        credentialsId: 'jenkins-k8s-token',
+                        namespace: '',
+                        serverUrl: 'https://host.docker.internal:59398'
+                    ]]
+                ) {
+                    script {
+                        def pods = groovyMethods.findPodsFromName(
+                            "${namespace}",
+                            "${serviceName}"
+                        )
 
-    stage("Create New Pods") {
-        steps {
-            withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'minikube', contextName: 'minikube', credentialsId: 'jenkins-k8s-token', namespace: '', serverUrl: 'https://host.docker.internal:59398']]) {
-            script {
-                    def pods = groovyMethods.findPodsFromName("${namespace}", "${serviceName}")
-                    for (podName in pods) {
-                        sh """
-                            kubectl delete -n ${namespace} pod ${podName}
-                            sleep 10s
-                        """
+                        for (podName in pods) {
+                            sh """
+                                kubectl delete -n ${namespace} pod ${podName}
+                                sleep 10s
+                            """
+                        }
                     }
+                }
             }
-          }
         }
-    }
 
+    } // End stages
 
     post {
 
@@ -323,6 +331,7 @@ pipeline {
         }
     }
 }
+
 
 
 
