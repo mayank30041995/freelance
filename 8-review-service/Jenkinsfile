@@ -80,61 +80,51 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
-                    dir('pipeline') {
-                        git branch: 'main',
-                            credentialsId: 'github',
-                            url: 'https://github.com/mayank30041995/freelance.git'
+                    groovyMethods = load(
+                        '10-jenkins-automation/functions.groovy'
+                    )
+                }
 
-                        groovyMethods = load(
-                            '10-jenkins-automation/functions.groovy'
+                dir('8-review-service/8-review-service') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'github-packages-token',
+                            variable: 'GITHUB_PACKAGES_TOKEN'
                         )
-                    }
+                    ]) {
+                        sh '''
+                            set -eu
 
-                    dir('8-review-service') {
-                        git branch: 'main',
-                            credentialsId: 'github',
-                            url: 'https://github.com/mayank30041995/freelance.git'
+                            cleanup() {
+                                rm -f .npmrc
+                            }
 
-                        withCredentials([
-                            string(
-                                credentialsId: 'github-packages-token',
-                                variable: 'GITHUB_PACKAGES_TOKEN'
-                            )
-                        ]) {
-                            sh '''
-                                set -eu
+                            trap cleanup EXIT
 
-                                cleanup() {
-                                    rm -f .npmrc
-                                }
+                            echo "Checking project directory..."
+                            echo "Current directory: $(pwd)"
 
-                                trap cleanup EXIT
+                            if [ ! -f package.json ]; then
+                                echo "ERROR: package.json not found!"
+                                ls -la
+                                exit 1
+                            fi
 
-                                echo "Checking project directory..."
+                            printf '%s\\n' \
+                                '@mayank30041995:registry=https://npm.pkg.github.com' \
+                                "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
+                                > .npmrc
 
-                                if [ ! -f package.json ]; then
-                                    echo "ERROR: package.json not found!"
-                                    echo "Current directory: $(pwd)"
-                                    ls -la
-                                    exit 1
-                                fi
+                            echo "Installing dependencies..."
 
-                                printf '%s\\n' \
-                                    '@mayank30041995:registry=https://npm.pkg.github.com' \
-                                    "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
-                                    > .npmrc
+                            npm ci
 
-                                echo "Installing dependencies..."
+                            echo "Building application..."
 
-                                npm ci
+                            npm run build
 
-                                echo "Building application..."
-
-                                npm run build
-
-                                echo "Dependencies installed and build completed."
-                            '''
-                        }
+                            echo "Dependencies installed and build completed."
+                        '''
                     }
                 }
             }
@@ -142,7 +132,7 @@ pipeline {
 
         stage('Build and Push') {
             steps {
-                dir('8-review-service') {
+                dir('8-review-service/8-review-service') {
                     withCredentials([
                         string(
                             credentialsId: 'github-packages-token',
@@ -240,7 +230,6 @@ pipeline {
                 }
             }
         }
-
     }
 
     post {
