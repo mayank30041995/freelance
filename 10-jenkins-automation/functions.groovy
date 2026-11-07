@@ -42,22 +42,12 @@ def findPodsFromName(String namespace, String name) {
     return podsRaw.readLines()
 }
 
-def notifySlack(String text, String channel = '', List attachments = []) {
-
-    def jenkinsIcon =
-        'https://a.slack-edge.com/205a/img/services/jenkins-ci_72.png'
+def notifySlack(String text, String channel, List attachments) {
 
     def payload = JsonOutput.toJson([
-        text       : text,
-        username   : 'jenkins',
-        icon_url   : jenkinsIcon,
+        text: text,
         attachments: attachments
     ])
-
-    writeFile(
-        file: 'slack-payload.json',
-        text: payload
-    )
 
     withCredentials([
         string(
@@ -65,14 +55,26 @@ def notifySlack(String text, String channel = '', List attachments = []) {
             variable: 'SLACK_WEBHOOK'
         )
     ]) {
-        sh '''
-            set +x
 
-            curl --fail --silent --show-error \
-                -X POST "$SLACK_WEBHOOK" \
-                -H 'Content-Type: application/json' \
-                --data-binary @slack-payload.json
-        '''
+        writeFile(
+            file: 'slack-payload.json',
+            text: payload
+        )
+
+        try {
+            sh '''
+                set +x
+
+                curl --fail --silent --show-error \
+                    --connect-timeout 10 \
+                    --max-time 30 \
+                    -X POST "$SLACK_WEBHOOK" \
+                    -H "Content-Type: application/json" \
+                    --data @slack-payload.json
+            '''
+        } finally {
+            sh 'rm -f slack-payload.json'
+        }
     }
 }
 
