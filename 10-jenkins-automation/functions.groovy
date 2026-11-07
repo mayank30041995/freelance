@@ -42,12 +42,7 @@ def findPodsFromName(String namespace, String name) {
     return podsRaw.readLines()
 }
 
-def notifySlack(String text, String channel, List attachments) {
-
-    def payload = JsonOutput.toJson([
-        text: text,
-        attachments: attachments
-    ])
+def notifySlack(text, channel, attachments) {
 
     withCredentials([
         string(
@@ -55,6 +50,10 @@ def notifySlack(String text, String channel, List attachments) {
             variable: 'SLACK_WEBHOOK'
         )
     ]) {
+        def payload = JsonOutput.toJson([
+            text: text,
+            attachments: attachments
+        ])
 
         writeFile(
             file: 'slack-payload.json',
