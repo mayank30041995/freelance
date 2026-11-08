@@ -232,8 +232,8 @@ pipeline {
                     }
                 }
             }
+        }
     }
-
     post {
 
         success {
