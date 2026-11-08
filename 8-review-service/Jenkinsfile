@@ -25,7 +25,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'mayank30041995/jobber-review'
-        IMAGE_TAG = "stable-${BUILD_NUMBER}"
+        // IMAGE_TAG = "stable-${BUILD_NUMBER}"
+        IMAGE_TAG = "stable"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     }
 
@@ -37,11 +38,52 @@ pipeline {
             }
         }
 
+        // stage('Checkout') {
+        //     steps {
+        //         git branch: 'main',
+        //             credentialsId: 'github',
+        //             url: 'https://github.com/mayank30041995/freelance.git'
+
+        //         script {
+        //             env.GIT_COMMIT_SHORT = sh(
+        //                 script: 'git rev-parse --short HEAD',
+        //                 returnStdout: true
+        //             ).trim()
+
+        //             echo "Git Commit: ${env.GIT_COMMIT_SHORT}"
+        //         }
+        //     }
+        // }
+
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'github',
-                    url: 'https://github.com/mayank30041995/freelance.git'
+                checkout([
+                    $class: 'GitSCM',
+
+                    branches: [[name: '*/main']],
+
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/mayank30041995/freelance.git',
+                        credentialsId: 'github'
+                    ]],
+
+                    extensions: [
+                        [
+                            $class: 'SparseCheckoutPaths',
+                            sparseCheckoutPaths: [
+                                [$class: 'SparseCheckoutPath', path: '8-review-service/'],
+                                [$class: 'SparseCheckoutPath', path: '10-jenkins-automation/']
+                            ]
+                        ],
+                        [
+                            $class: 'CloneOption',
+                            shallow: true,
+                            depth: 1,
+                            noTags: true,
+                            honorRefspec: true
+                        ]
+                    ]
+                ])
 
                 script {
                     env.GIT_COMMIT_SHORT = sh(
@@ -52,7 +94,7 @@ pipeline {
                     echo "Git Commit: ${env.GIT_COMMIT_SHORT}"
                 }
             }
-        }
+        }        
 
         stage('Verify Node and NPM') {
             steps {
