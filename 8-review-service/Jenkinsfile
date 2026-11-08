@@ -5,9 +5,9 @@ import groovy.transform.Field
 
 def groovyMethods
 
-namespace = "production"
-serviceName = "jobber-review"
-service = "Jobber Reviews"
+def namespace = "production"
+def serviceName = "jobber-review"
+def service = "Jobber Reviews"
 
 pipeline {
     agent {
@@ -85,7 +85,7 @@ pipeline {
                     )
                 }
 
-                dir('8-review-service/8-review-service') {
+                dir('8-review-service') {
                     withCredentials([
                         string(
                             credentialsId: 'github-packages-token',
@@ -132,7 +132,7 @@ pipeline {
 
         stage('Build and Push') {
             steps {
-                dir('8-review-service/8-review-service') {
+                dir('8-review-service') {
                     withCredentials([
                         string(
                             credentialsId: 'github-packages-token',
