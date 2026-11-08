@@ -129,6 +129,30 @@ pipeline {
                 }
             }
         }
+        
+        stage('Lint Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run lint:check'
+                }
+            }
+        }
+
+        stage('Code Format Check') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run prettier:check'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('8-review-service') {
+                    sh 'npm run test'
+                }
+            }
+        }
 
         stage('Build and Push') {
             steps {
