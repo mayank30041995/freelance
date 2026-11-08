@@ -204,7 +204,7 @@ pipeline {
                         contextName: 'minikube',
                         credentialsId: 'jenkins-k8s-token',
                         namespace: '',
-                        serverUrl: 'https://host.docker.internal:59398'
+                        serverUrl: 'https://host.docker.internal:51951'
                     ]]
                 ) {
                     script {
