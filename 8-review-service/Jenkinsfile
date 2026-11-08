@@ -197,39 +197,41 @@ pipeline {
 
         stage('Create New Pods') {
             steps {
-                withKubeCredentials(
-                    kubectlCredentials: [[
-                        caCertificate: '',
-                        clusterName: 'minikube',
-                        contextName: 'minikube',
-                        credentialsId: 'jenkins-k8s-token',
-                        namespace: '',
-                        serverUrl: 'https://host.docker.internal:51951'
-                    ]]
-                ) {
+                withCredentials([
+                    file(credentialsId: 'jenkins-kubeconfig', variable: 'KUBECONFIG')
+                ]) {
                     script {
-                        def pods = groovyMethods.findPodsFromName(
-                            "${namespace}",
-                            "${serviceName}"
-                        )
+                        echo "Deploying ${IMAGE_NAME}:${IMAGE_TAG} to Kubernetes..."
 
-                        if (pods && !pods.isEmpty()) {
-                            echo "Found existing pods: ${pods}"
+                        def containerName = sh(
+                            script: """
+                                kubectl get deployment ${serviceName} \
+                                -n ${namespace} \
+                                -o jsonpath='{.spec.template.spec.containers[0].name}'
+                            """,
+                            returnStdout: true
+                        ).trim()
 
-                            for (podName in pods) {
-                                echo "Deleting pod: ${podName}"
-
-                                sh """
-                                    kubectl delete -n ${namespace} pod ${podName} --wait=true
-                                """
-                            }
-                        } else {
-                            echo "No existing pods found for ${serviceName}."
+                        if (!containerName) {
+                            error("Could not find a container in deployment ${serviceName}")
                         }
+
+                        echo "Updating container: ${containerName}"
+
+                        sh """
+                            kubectl set image deployment/${serviceName} \
+                            ${containerName}=${IMAGE_NAME}:${IMAGE_TAG} \
+                            -n ${namespace}
+
+                            kubectl rollout status deployment/${serviceName} \
+                            -n ${namespace} \
+                            --timeout=180s
+                        """
+
+                        echo "Deployment completed successfully."
                     }
                 }
             }
-        }
     }
 
     post {
